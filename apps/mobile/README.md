@@ -1,37 +1,48 @@
 # Aquarela Mobile App
 
-Este é o aplicativo móvel do projeto Aquarela, construído utilizando:
-- **React Native** com **Expo**
-- **TypeScript**
-- **Expo Router** para navegação baseada em arquivos
-- **AsyncStorage** para persistência de dados locais
+Aplicativo móvel do projeto Aquarela, construído com React Native, Expo Router e TypeScript.
 
-## Estrutura de Pastas
-A estrutura interna segue a divisão em features (Feature-Sliced Design simplificado):
-- `/app`: Telas da aplicação (roteamento).
-- `/src/components`: Componentes visuais genéricos (UI).
-- `/src/design`: Tokens de design (cores, tipografia, espaçamento).
-- `/src/features`: Lógica de negócio, componentes e hooks isolados por domínio (ex: `memories`, `visits`).
-- `/src/services`: Serviços e integração (armazenamento local).
-- `/src/types`: Definições de tipos TypeScript.
-- `/src/mocks`: Dados simulados (já que não há backend).
+## Integração local
 
-## Como rodar localmente
+O app agora usa a API local em Docker como fonte de verdade para autenticação, perfis, memórias, pessoas, diário, visitas, legados, scanner e relatórios. Tokens de sessão ficam no `expo-secure-store`, com fallback para web durante testes.
 
-1. Na raiz do monorepo, acesse esta pasta:
+Serviços esperados:
+
+- API: `http://localhost:3333`
+- Postgres local: `localhost:55432`
+- MinIO: `http://localhost:9001`
+- Face service: `http://localhost:8000`
+
+Para testar em celular físico, defina a URL da API com o IP da máquina na rede:
+
 ```bash
-cd apps/mobile
+set EXPO_PUBLIC_API_URL=http://10.10.11.182:3333
+npm run --workspace mobile start
 ```
 
-2. Instale as dependências caso ainda não tenha feito:
-```bash
-npm install
+No PowerShell, se preferir na mesma linha:
+
+```powershell
+$env:EXPO_PUBLIC_API_URL='http://10.10.11.182:3333'; npm run --workspace mobile start
 ```
 
-3. Inicie o bundler do Expo:
+## Como rodar
+
+Na raiz do monorepo:
+
 ```bash
-npm run start
+docker compose up -d postgres minio
+npm run --workspace api prisma:deploy
+npm run --workspace api prisma:seed
+npm run --workspace api dev
+npm run --workspace mobile start
 ```
 
-## Dados Fictícios
-Toda a interação de backend e persistência real é simulada utilizando o `AsyncStorage` com preenchimento inicial através da pasta `/src/mocks`.
+Login seed:
+
+- E-mail: `ana@aquarela.local`
+- Senha: `aquarela123`
+
+## Observações
+
+Biometria, câmera, galeria e mídia nativa exigem Expo dev build para o fluxo completo. Expo Go ainda ajuda em partes do app, mas reconhecimento/câmera/biometria devem ser testados em dev build.

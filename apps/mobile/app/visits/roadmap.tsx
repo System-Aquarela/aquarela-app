@@ -1,237 +1,91 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { Text } from '../../src/components/ui/Text';
 import { Card } from '../../src/components/ui/Card';
+import { Button } from '../../src/components/ui/Button';
 import { theme } from '../../src/design/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../../src/store/AppContext';
+import { memoriesService } from '../../src/services/memories.service';
+import { Memory } from '../../src/types/memory.types';
 
 export default function RoadmapScreen() {
   const router = useRouter();
+  const { selectedProfile } = useApp();
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    memoriesService.getMemories()
+      .then(items => setMemories(items.filter(item => !item.isSensitive).sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite)).slice(0, 3)))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <Screen scrollable>
-      {/* Header */}
+    <Screen scrollable contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.blueMemory} />
-        </TouchableOpacity>
-        <Text variant="xl" weight="bold" color={theme.colors.blueMemory}>
-          Aquarela
-        </Text>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={20} color={theme.colors.gray400} />
-        </View>
+        <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Voltar"><Ionicons name="arrow-back" size={26} color={theme.colors.blueMemory} /></TouchableOpacity>
+        <Text variant="xl" weight="bold" color={theme.colors.blueMemory}>Preparar visita</Text>
+        <View style={styles.avatar}><Text variant="sm" weight="bold" color={theme.colors.whiteSnow}>{selectedProfile?.name.slice(0, 1)}</Text></View>
       </View>
 
-      <Text variant="xxl" weight="bold" color={theme.colors.blueMemory} style={styles.title}>
-        Preparar visita para Dona Lúcia
-      </Text>
-      <Text variant="md" color={theme.colors.gray500} style={styles.subtitle}>
-        Reserve um momento para se organizar antes do encontro.
-      </Text>
+      <Text variant="xxl" weight="bold" color={theme.colors.blueMemory} style={styles.title}>Visita para {selectedProfile?.nickname || selectedProfile?.name}</Text>
+      <Text variant="md" color={theme.colors.gray500} style={styles.subtitle}>Um roteiro afetivo baseado nos registros reais deste perfil.</Text>
 
-      {/* O que levar */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={[styles.iconBg, { backgroundColor: '#3B5955' }]}>
-            <Ionicons name="bag-handle" size={20} color={theme.colors.whiteSnow} />
-          </View>
-          <Text variant="lg" weight="bold" color={theme.colors.blueMemory} style={styles.sectionTitle}>
-            O que levar
-          </Text>
-        </View>
-
-        <View style={styles.itemBox}>
-          <View style={styles.itemIconImageMock}>
-            <Ionicons name="image-outline" size={20} color={theme.colors.blueMemory} />
-          </View>
-          <View>
-            <Text variant="md" weight="bold" color={theme.colors.readingGraphite}>Foto de Ubatuba</Text>
-            <Text variant="sm" color={theme.colors.gray500}>Álbum de 1985</Text>
-          </View>
-        </View>
-
-        <View style={styles.itemBox}>
-          <View style={[styles.itemIconBg, { backgroundColor: '#B8E5D3' }]}>
-            <Ionicons name="musical-notes" size={20} color={theme.colors.readingGraphite} />
-          </View>
-          <View>
-            <Text variant="md" weight="bold" color={theme.colors.readingGraphite}>Playlist favorita</Text>
-            <Text variant="sm" color={theme.colors.gray500}>Samba Clássico</Text>
-          </View>
-        </View>
+      <Card style={styles.section} padding="lg">
+        <SectionTitle icon="images-outline" title="Memórias sugeridas" color={theme.colors.blueMemory} />
+        {loading ? <ActivityIndicator color={theme.colors.blueMemory} /> : memories.length === 0 ? (
+          <Text variant="sm" color={theme.colors.gray500}>Adicione uma memória para montar o roteiro.</Text>
+        ) : memories.map(memory => (
+          <TouchableOpacity key={memory.id} style={styles.memoryRow} onPress={() => router.push(`/memories/${memory.id}`)}>
+            <View style={styles.memoryIcon}><Ionicons name={memory.isFavorite ? 'heart' : 'image-outline'} size={20} color={theme.colors.softTerracotta} /></View>
+            <View style={styles.flex}><Text variant="md" weight="bold">{memory.title}</Text><Text variant="sm" color={theme.colors.gray500}>{memory.period}</Text></View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.gray400} />
+          </TouchableOpacity>
+        ))}
       </Card>
 
-      {/* Assuntos Favoritos */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={[styles.iconBg, { backgroundColor: '#21423B' }]}>
-            <Ionicons name="heart" size={20} color={theme.colors.whiteSnow} />
-          </View>
-          <Text variant="lg" weight="bold" color={theme.colors.blueMemory} style={styles.sectionTitle}>
-            Assuntos favoritos
-          </Text>
-        </View>
-
-        <View style={styles.listItem}>
-          <Ionicons name="checkmark-circle-outline" size={24} color={theme.colors.sereneGreen} />
-          <Text variant="md" color={theme.colors.readingGraphite} style={styles.listText}>O jardim de rosas</Text>
-        </View>
-        <View style={styles.listItem}>
-          <Ionicons name="checkmark-circle-outline" size={24} color={theme.colors.sereneGreen} />
-          <Text variant="md" color={theme.colors.readingGraphite} style={styles.listText}>As receitas de domingo</Text>
-        </View>
-        <View style={styles.listItem}>
-          <Ionicons name="checkmark-circle-outline" size={24} color={theme.colors.sereneGreen} />
-          <Text variant="md" color={theme.colors.readingGraphite} style={styles.listText}>Histórias da infância</Text>
-        </View>
+      <Card style={styles.section} padding="lg">
+        <SectionTitle icon="chatbubbles-outline" title="Boas pontes de conversa" color={theme.colors.sereneGreen} />
+        {(selectedProfile?.favoriteSubjects.length ? selectedProfile.favoriteSubjects : ['Pergunte sobre o dia e ofereça escolhas simples']).map(item => (
+          <View key={item} style={styles.listRow}><Ionicons name="checkmark-circle" size={21} color={theme.colors.sereneGreen} /><Text variant="md" style={styles.listText}>{item}</Text></View>
+        ))}
+        {!!selectedProfile?.favoriteSongs.length && <Text variant="sm" color={theme.colors.gray500} style={styles.songHint}>Música sugerida: {selectedProfile.favoriteSongs[0]}</Text>}
       </Card>
 
-      {/* Assuntos a Evitar */}
-      <View style={styles.dangerBox}>
-        <View style={styles.sectionHeader}>
-          <View style={[styles.iconBg, { backgroundColor: '#FDE4DE' }]}>
-            <Ionicons name="warning-outline" size={20} color={theme.colors.calmError} />
-          </View>
-          <Text variant="lg" weight="bold" color={theme.colors.readingGraphite} style={styles.sectionTitle}>
-            Assuntos a Evitar
-          </Text>
-        </View>
+      {!!selectedProfile?.sensitiveTopics.length && (
+        <Card style={styles.warning} padding="lg">
+          <SectionTitle icon="warning-outline" title="Assuntos para tratar com cuidado" color={theme.colors.attention} />
+          {selectedProfile.sensitiveTopics.map(item => <View key={item} style={styles.listRow}><View style={styles.dot} /><Text variant="md" style={styles.listText}>{item}</Text></View>)}
+        </Card>
+      )}
 
-        <Text variant="sm" color={theme.colors.gray500} style={styles.dangerDesc}>
-          Para manter o ambiente tranquilo, sugerimos não focar nestes temas hoje.
-        </Text>
-
-        <View style={styles.dangerItem}>
-          <View style={styles.dangerDot} />
-          <Text variant="md" color={theme.colors.gray500}>Estadias no hospital</Text>
-        </View>
-        <View style={styles.dangerItem}>
-          <View style={styles.dangerDot} />
-          <Text variant="md" color={theme.colors.gray500}>Obras na casa da praia</Text>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/visits/active')}>
-        <Ionicons name="play" size={20} color={theme.colors.whiteSnow} style={styles.btnIcon} />
-        <Text variant="md" weight="bold" color={theme.colors.whiteSnow}>Iniciar Visita</Text>
-      </TouchableOpacity>
+      <Button title="Iniciar visita" icon={<Ionicons name="play" size={20} color={theme.colors.whiteSnow} />} onPress={() => router.push('/visits/active')} disabled={loading || memories.length === 0} />
     </Screen>
   );
 }
 
+function SectionTitle({ icon, title, color }: { icon: any; title: string; color: string }) {
+  return <View style={styles.sectionTitle}><Ionicons name={icon} size={23} color={color} /><Text variant="lg" weight="bold" color={theme.colors.blueMemory} style={styles.sectionTitleText}>{title}</Text></View>;
+}
+
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  avatarContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.gray200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    marginBottom: theme.spacing.xs,
-  },
-  subtitle: {
-    marginBottom: theme.spacing.xl,
-    lineHeight: 22,
-  },
-  sectionCard: {
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  iconBg: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    marginLeft: theme.spacing.sm,
-  },
-  itemBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF5EE',
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: '#EAE2D6',
-  },
-  itemIconImageMock: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.sm,
-    backgroundColor: '#EAE2D6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  itemIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  listText: {
-    marginLeft: theme.spacing.sm,
-  },
-  dangerBox: {
-    backgroundColor: '#F9ECE5',
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: '#EBD1CA',
-    marginBottom: theme.spacing.xl,
-  },
-  dangerDesc: {
-    marginBottom: theme.spacing.md,
-    lineHeight: 20,
-  },
-  dangerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  dangerDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.calmError,
-    marginRight: theme.spacing.md,
-  },
-  primaryButton: {
-    backgroundColor: theme.colors.blueMemory,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    borderRadius: 24,
-    marginBottom: theme.spacing.xl,
-  },
-  btnIcon: {
-    marginRight: theme.spacing.sm,
-  },
+  content: { paddingBottom: 48 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.xl },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: theme.colors.sereneGreen, alignItems: 'center', justifyContent: 'center' },
+  title: { marginBottom: theme.spacing.xs },
+  subtitle: { marginBottom: theme.spacing.xl, lineHeight: 22 },
+  section: { marginBottom: theme.spacing.lg },
+  warning: { marginBottom: theme.spacing.xl, backgroundColor: '#FFF7E8', borderWidth: 1, borderColor: '#F1D39E' },
+  sectionTitle: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
+  sectionTitleText: { marginLeft: theme.spacing.sm },
+  memoryRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: theme.spacing.sm, borderBottomWidth: 1, borderBottomColor: theme.colors.gray100 },
+  memoryIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: theme.colors.lightSand, alignItems: 'center', justifyContent: 'center', marginRight: theme.spacing.md },
+  flex: { flex: 1 },
+  listRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.sm },
+  listText: { marginLeft: theme.spacing.sm, flex: 1, lineHeight: 21 },
+  songHint: { marginTop: theme.spacing.sm, lineHeight: 20 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.colors.attention },
 });

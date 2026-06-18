@@ -1,29 +1,44 @@
-import { storageService } from './storage.service';
+import { apiClient, resolveApiUrl } from './api.service';
+import { profilesService } from './profiles.service';
 import { Memory } from '../types/memory.types';
-import { mockMemories } from '../mocks/memories.mock';
 
-const MEMORIES_KEY = '@aquarela_memories';
+async function selectedProfileId() {
+  const profile = await profilesService.getSelectedProfile();
+  if (!profile) throw new Error('Selecione uma pessoa acompanhada.');
+  return profile.id;
+}
 
 export const memoriesService = {
   async getMemories(): Promise<Memory[]> {
-    const memories = await storageService.getItem<Memory[]>(MEMORIES_KEY);
-    if (!memories) {
-      // Initialize with mock
-      await storageService.setItem(MEMORIES_KEY, mockMemories);
-      return mockMemories;
-    }
-    return memories;
+    const profileId = await selectedProfileId();
+    const response = await apiClient.get<{ memories: Memory[] }>(`/profiles/${profileId}/memories`);
+    return response.memories.map(memory => ({ ...memory, imageUrl: resolveApiUrl(memory.imageUrl) }));
+  },
+
+  async getMemory(id: string): Promise<Memory | null> {
+    const response = await apiClient.get<{ memory: Memory }>(`/memories/${id}`);
+    return { ...response.memory, imageUrl: resolveApiUrl(response.memory.imageUrl) };
   },
 
   async addMemory(memory: Memory): Promise<void> {
-    const memories = await this.getMemories();
-    memories.unshift(memory);
-    await storageService.setItem(MEMORIES_KEY, memories);
+    const profileId = await selectedProfileId();
+    await apiClient.post(`/profiles/${profileId}/memories`, {
+      title: memory.title,
+      period: memory.period,
+      story: memory.story,
+      category: memory.category,
+      suggestedPhrase: memory.suggestedPhrase,
+      previousReaction: memory.previousReaction,
+      isSensitive: memory.isSensitive,
+      isFavorite: memory.isFavorite,
+      location: memory.location,
+      mediaId: memory.mediaId,
+      peopleIds: memory.peopleIds,
+    });
   },
 
   async toggleFavorite(id: string): Promise<void> {
-    const memories = await this.getMemories();
-    const updated = memories.map(m => m.id === id ? { ...m, isFavorite: !m.isFavorite } : m);
-    await storageService.setItem(MEMORIES_KEY, updated);
-  }
+    const memory = await this.getMemory(id);
+    await apiClient.patch(`/memories/${id}`, { isFavorite: !memory?.isFavorite });
+  },
 };

@@ -2,9 +2,11 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider } from '../src/store/AppContext';
 import { theme } from '../src/design/theme';
+import { AccessibilityProvider } from '../src/store/AccessibilityContext';
 
 export default function RootLayout() {
   return (
+    <AccessibilityProvider>
     <AppProvider>
       <StatusBar style="dark" />
       <Stack
@@ -18,9 +20,17 @@ export default function RootLayout() {
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/register" />
         <Stack.Screen name="profiles/select" />
+        <Stack.Screen name="profiles/manage" />
         <Stack.Screen name="tabs" />
         <Stack.Screen name="memories/[id]" />
         <Stack.Screen name="memories/create" />
+        <Stack.Screen name="memories/timeline" />
+        <Stack.Screen name="memories/affective-map" />
+        <Stack.Screen name="legacy/index" />
+        <Stack.Screen name="chatbot/index" />
+        <Stack.Screen name="reports/index" />
+        <Stack.Screen name="premium/index" />
+        <Stack.Screen name="scanner/register" />
         <Stack.Screen name="people/index" />
         <Stack.Screen name="people/[id]" />
         <Stack.Screen name="visits/roadmap" />
@@ -34,5 +44,6 @@ export default function RootLayout() {
         <Stack.Screen name="settings/privacy" />
       </Stack>
     </AppProvider>
+    </AccessibilityProvider>
   );
 }

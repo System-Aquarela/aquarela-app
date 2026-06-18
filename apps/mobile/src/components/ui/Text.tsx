@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text as RNText, TextProps as RNTextProps, StyleSheet } from 'react-native';
 import { theme } from '../../design/theme';
+import { useAccessibility } from '../../store/AccessibilityContext';
 
 interface TextProps extends RNTextProps {
   variant?: keyof typeof theme.typography.size;
@@ -18,13 +19,14 @@ export function Text({
   children,
   ...props
 }: TextProps) {
+  const { largeText, highContrast } = useAccessibility();
   return (
     <RNText
       style={[
         {
-          fontSize: theme.typography.size[variant],
+          fontSize: theme.typography.size[variant] * (largeText ? 1.18 : 1),
           fontWeight: theme.typography.weight[weight],
-          color,
+          color: highContrast && color === theme.colors.readingGraphite ? '#000000' : color,
           textAlign: align,
         },
         style,

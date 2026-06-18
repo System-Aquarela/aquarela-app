@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
@@ -8,10 +8,15 @@ import { Button } from '../../src/components/ui/Button';
 import { theme } from '../../src/design/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../../src/store/AppContext';
+import { visitsService } from '../../src/services/visits.service';
+import { VisitRecord } from '../../src/types/visit.types';
 
 export default function VisitScreen() {
   const router = useRouter();
   const { selectedProfile } = useApp();
+  const [visits, setVisits] = useState<VisitRecord[]>([]);
+
+  useEffect(() => { visitsService.getVisits().then(setVisits).catch(() => setVisits([])); }, []);
 
   return (
     <Screen scrollable>
@@ -44,18 +49,15 @@ export default function VisitScreen() {
           Visitas anteriores
         </Text>
         
-        <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/visits/summary')}>
-          <Card style={styles.historyCard}>
-            <View style={styles.historyIconWrapper}>
-              <Ionicons name="checkmark-circle" size={24} color={theme.colors.calmSuccess} />
-            </View>
+        {visits.length === 0 ? <Text variant="sm" color={theme.colors.gray500}>Nenhuma visita registrada ainda.</Text> : visits.map(visit => (
+          <Card key={visit.id} style={styles.historyCard}>
+            <View style={styles.historyIconWrapper}><Ionicons name={visit.generatedDiscomfort ? 'alert-circle' : 'checkmark-circle'} size={24} color={visit.generatedDiscomfort ? theme.colors.attention : theme.colors.calmSuccess} /></View>
             <View style={styles.historyCardInfo}>
-              <Text variant="md" weight="bold">01/10/2023 - Boa interação</Text>
-              <Text variant="sm" color={theme.colors.gray500}>Por Familiar Principal</Text>
+              <Text variant="md" weight="bold">{new Date(visit.date).toLocaleDateString('pt-BR')} · {visit.generatedConversation ? 'Gerou conversa' : visit.generatedSmile ? 'Gerou sorriso' : 'Visita registrada'}</Text>
+              <Text variant="sm" color={theme.colors.gray500} numberOfLines={2}>{visit.observation || 'Sem observação adicional.'}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.gray400} />
           </Card>
-        </TouchableOpacity>
+        ))}
       </View>
     </Screen>
   );

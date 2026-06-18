@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
@@ -8,25 +8,58 @@ import { useApp } from '../../src/store/AppContext';
 import { theme } from '../../src/design/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../src/components/ui/Card';
+import { biometricService } from '../../src/services/biometric.service';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useApp();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, restoreSession } = useApp();
+  const [email, setEmail] = useState('ana@aquarela.local');
+  const [password, setPassword] = useState('aquarela123');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState('biometria');
+
+  useEffect(() => {
+    Promise.all([biometricService.isEnabled(), biometricService.isAvailable(), biometricService.getLabel()])
+      .then(([enabled, available, label]) => {
+        setBiometricEnabled(enabled && available);
+        setBiometricLabel(label);
+      });
+  }, []);
 
   const handleLogin = async () => {
-    if (!email) return;
+    if (!email || !password) return;
     setLoading(true);
-    await login(email);
-    setLoading(false);
-    router.replace('/profiles/select');
+    setError('');
+    try {
+      await login(email, password);
+      router.replace('/profiles/select');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível entrar.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const unlocked = await biometricService.authenticate();
+      if (!unlocked) throw new Error('Biometria não concluída. Use e-mail e senha.');
+      const restored = await restoreSession();
+      if (!restored) throw new Error('Faça login com senha uma vez antes de usar biometria.');
+      router.replace('/profiles/select');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível desbloquear.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Screen scrollable contentContainerStyle={styles.container}>
-      {/* Background Blobs */}
       <View style={styles.blobTopLeft} />
       <View style={styles.blobBottomRight} />
 
@@ -43,7 +76,6 @@ export default function LoginScreen() {
         <View style={styles.form}>
           <Input
             label="E-mail"
-            placeholder=""
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -51,16 +83,15 @@ export default function LoginScreen() {
           />
           <Input
             label="Senha"
-            placeholder=""
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text variant="sm" weight="bold" color={theme.colors.blueMemory} align="right">
-              Esqueci minha senha
+          {!!error && (
+            <Text variant="sm" color={theme.colors.calmError} style={styles.errorText}>
+              {error}
             </Text>
-          </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
@@ -68,16 +99,10 @@ export default function LoginScreen() {
           <Ionicons name="enter-outline" size={24} color={theme.colors.readingGraphite} style={{ marginLeft: 8 }} />
         </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text variant="sm" color={theme.colors.gray500} style={styles.dividerText}>ou</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity style={styles.inviteBtn}>
-          <Ionicons name="mail-outline" size={20} color={theme.colors.softTerracotta} style={{ marginRight: 8 }} />
-          <Text variant="md" weight="bold" color={theme.colors.softTerracotta}>
-            Entrar com Convite
+        <TouchableOpacity style={[styles.biometricBtn, !biometricEnabled && styles.disabledBtn]} onPress={handleBiometricLogin} disabled={loading || !biometricEnabled}>
+          <Ionicons name="finger-print-outline" size={22} color={theme.colors.blueMemory} style={{ marginRight: 8 }} />
+          <Text variant="md" weight="bold" color={theme.colors.blueMemory}>
+            Desbloquear com {biometricLabel}
           </Text>
         </TouchableOpacity>
 
@@ -104,7 +129,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: '#E6F0F9', // Light blue
+    backgroundColor: '#E6F0F9',
     opacity: 0.5,
   },
   blobBottomRight: {
@@ -114,7 +139,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: '#FDE4DE', // Peach
+    backgroundColor: '#FDE4DE',
     opacity: 0.5,
   },
   card: {
@@ -136,34 +161,27 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: theme.spacing.xl,
   },
-  forgotPassword: {
-    marginTop: theme.spacing.sm,
-    alignSelf: 'flex-end',
+  errorText: {
+    marginTop: theme.spacing.xs,
   },
   loginBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.gray200,
-  },
-  dividerText: {
-    paddingHorizontal: theme.spacing.md,
-  },
-  inviteBtn: {
+  biometricBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xxl,
+    borderWidth: 1,
+    borderColor: theme.colors.blueMemory,
+    borderRadius: theme.radius.lg,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+  disabledBtn: {
+    opacity: 0.5,
   },
   createAccountBtn: {
     alignItems: 'center',

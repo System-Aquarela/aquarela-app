@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Aquarela",
+    "slug": "aquarela-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,10 +9,63 @@
     "scheme": "aquarela",
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "O Aquarela usa o Face ID apenas para desbloquear sua sessão neste aparelho."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "O Aquarela usa o Face ID apenas para desbloquear sua sessão neste aparelho."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Aquarela usa a câmera para registrar memórias e reconhecer pessoas autorizadas.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Aquarela acessa fotos para registrar memórias e pessoas autorizadas.",
+          "cameraPermission": "O Aquarela usa a câmera para registrar fotos autorizadas.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Development"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
+    "extra": {
+      "apiUrl": "http://localhost:3333",
+      "router": {},
+      "eas": {
+        "projectId": "17122898-78bc-4bfa-baec-87627f1289d4"
+      }
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "O Aquarela usa Face ID apenas para desbloquear sua sessão local."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +74,11 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "br.org.aquarela.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

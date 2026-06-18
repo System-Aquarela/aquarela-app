@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
 import { theme } from '../../design/theme';
+import { useAccessibility } from '../../store/AccessibilityContext';
 
 interface CardProps extends ViewProps {
   padding?: keyof typeof theme.spacing;
@@ -8,12 +9,14 @@ interface CardProps extends ViewProps {
 }
 
 export function Card({ padding = 'md', variant = 'elevated', style, children, ...props }: CardProps) {
+  const { highContrast } = useAccessibility();
   return (
     <View
       style={[
         styles.base,
         { padding: theme.spacing[padding] },
         styles[variant],
+        highContrast && styles.highContrast,
         style,
       ]}
       {...props}
@@ -42,4 +45,5 @@ const styles = StyleSheet.create({
   flat: {
     backgroundColor: theme.colors.gray100,
   },
+  highContrast: { borderWidth: 2, borderColor: theme.colors.readingGraphite },
 });

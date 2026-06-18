@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { Text } from '../../src/components/ui/Text';
@@ -20,9 +20,8 @@ export default function MemoryDetailScreen() {
   }, [id]);
 
   const loadMemory = async () => {
-    const memories = await memoriesService.getMemories();
-    const found = memories.find((m: Memory) => m.id === id);
-    if (found) setMemory(found);
+    if (typeof id !== 'string') return;
+    setMemory(await memoriesService.getMemory(id));
   };
 
   const handleToggleFavorite = async () => {
@@ -45,9 +44,12 @@ export default function MemoryDetailScreen() {
         />
       </View>
 
-      <View style={styles.imagePlaceholder}>
-        <Ionicons name="image" size={60} color={theme.colors.gray300} />
-      </View>
+      {memory.mediaType === 'foto' && memory.imageUrl ? <Image source={{ uri: memory.imageUrl }} style={styles.memoryImage} resizeMode="cover" /> : (
+        <View style={styles.imagePlaceholder}>
+          <Ionicons name={memory.mediaType === 'documento' ? 'document-text-outline' : memory.mediaType === 'audio' || memory.mediaType === 'musica' ? 'musical-notes-outline' : 'image'} size={60} color={theme.colors.gray300} />
+          <Text variant="sm" color={theme.colors.gray500} style={styles.mediaLabel}>{memory.mediaType ? `Mídia: ${memory.mediaType}` : 'Memória sem anexo'}</Text>
+        </View>
+      )}
 
       <Text variant="xxl" weight="bold" color={theme.colors.blueMemory} style={styles.title}>
         {memory.title}
@@ -118,6 +120,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
+  memoryImage: { width: '100%', height: 240, borderRadius: theme.radius.lg, marginBottom: theme.spacing.xl },
+  mediaLabel: { marginTop: theme.spacing.sm },
   title: {
     marginBottom: theme.spacing.sm,
   },

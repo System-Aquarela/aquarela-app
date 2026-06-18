@@ -8,6 +8,7 @@ interface ButtonProps extends TouchableOpacityProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
+  icon?: React.ReactNode;
 }
 
 export function Button({
@@ -15,7 +16,9 @@ export function Button({
   variant = 'primary',
   size = 'md',
   fullWidth = true,
+  icon,
   style,
+  disabled,
   ...props
 }: ButtonProps) {
   return (
@@ -25,11 +28,14 @@ export function Button({
         styles[variant],
         styles[`size_${size}`],
         fullWidth && styles.fullWidth,
+        disabled && styles.disabled,
         style,
       ]}
       activeOpacity={0.8}
+      disabled={disabled}
       {...props}
     >
+      {icon && <View style={styles.icon}>{icon}</View>}
       <Text
         variant={size === 'sm' ? 'sm' : 'lg'}
         weight="semibold"
@@ -45,6 +51,7 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     borderRadius: theme.radius.lg,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -76,5 +83,11 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: '100%',
+  },
+  icon: {
+    marginRight: theme.spacing.sm,
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });

@@ -2,7 +2,24 @@
   "name": "aquarela-monorepo",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "api:dev": "npm run --workspace api dev",
+    "api:build": "npm run --workspace api build",
+    "db:migrate": "npm run --workspace api prisma:migrate",
+    "db:seed": "npm run --workspace api prisma:seed",
+    "dev:infra": "docker compose up postgres minio face-service api"
+  },
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "dependencies": {
+    "expo": "~56.0.12",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  }
 }

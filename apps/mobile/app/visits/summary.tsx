@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { Text } from '../../src/components/ui/Text';
 import { Card } from '../../src/components/ui/Card';
@@ -14,32 +14,39 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function VisitSummaryScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ smile?: string; conversation?: string; discomfort?: string }>();
   const { selectedProfile, user } = useApp();
   
-  const [smile, setSmile] = useState(false);
-  const [conversation, setConversation] = useState(false);
-  const [discomfort, setDiscomfort] = useState(false);
+  const [smile, setSmile] = useState(params.smile === 'true');
+  const [conversation, setConversation] = useState(params.conversation === 'true');
+  const [discomfort, setDiscomfort] = useState(params.discomfort === 'true');
   const [obs, setObs] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSave = async () => {
     if (!selectedProfile || !user) return;
     
     setLoading(true);
-    const visit: VisitRecord = {
-      id: Math.random().toString(),
-      profileId: selectedProfile.id,
-      visitorId: user.id,
-      date: new Date().toISOString(),
-      generatedSmile: smile,
-      generatedConversation: conversation,
-      generatedDiscomfort: discomfort,
-      observation: obs
-    };
-
-    await visitsService.addVisit(visit);
-    setLoading(false);
-    router.replace('/tabs/home');
+    setError('');
+    try {
+      const visit: VisitRecord = {
+        id: Math.random().toString(),
+        profileId: selectedProfile.id,
+        visitorId: user.id,
+        date: new Date().toISOString(),
+        generatedSmile: smile,
+        generatedConversation: conversation,
+        generatedDiscomfort: discomfort,
+        observation: obs.trim(),
+      };
+      await visitsService.addVisit(visit);
+      router.replace('/tabs/home');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar a visita.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,7 +100,8 @@ export default function VisitSummaryScreen() {
         />
       </Card>
 
-      <Button title="Salvar registro" onPress={handleSave} disabled={loading} style={styles.button} />
+      {!!error && <Text variant="sm" color={theme.colors.calmError} style={styles.error}>{error}</Text>}
+      <Button title={loading ? 'Salvando...' : 'Salvar registro'} onPress={handleSave} disabled={loading} style={styles.button} />
       <Button title="Pular" variant="outline" onPress={() => router.replace('/tabs/home')} />
     </Screen>
   );
@@ -147,4 +155,5 @@ const styles = StyleSheet.create({
   button: {
     marginBottom: theme.spacing.md,
   },
+  error: { marginBottom: theme.spacing.md },
 });

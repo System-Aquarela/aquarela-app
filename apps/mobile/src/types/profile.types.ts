@@ -7,4 +7,8 @@ export interface Profile {
   favoriteSongs: string[];
   sensitiveTopics: string[];
   photoUrl?: string;
+  photoMediaId?: string;
+  city?: string;
+  role?: 'owner' | 'caregiver' | 'family' | 'viewer';
+  updatedAt?: string;
 }

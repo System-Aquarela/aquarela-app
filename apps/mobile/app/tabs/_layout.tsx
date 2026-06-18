@@ -29,7 +29,7 @@ export default function TabsLayout() {
       <ExpoTabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: 'Início',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainerHome]}>
               <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
@@ -40,7 +40,7 @@ export default function TabsLayout() {
       <ExpoTabs.Screen
         name="memories"
         options={{
-          title: 'Memories',
+          title: 'Memórias',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainerHome]}>
               <Ionicons name={focused ? "book" : "book-outline"} size={size} color={color} />
@@ -49,12 +49,12 @@ export default function TabsLayout() {
         }}
       />
       <ExpoTabs.Screen
-        name="visit"
+        name="scanner"
         options={{
-          title: 'Visit',
+          title: 'Scanner',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainerHome]}>
-              <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+              <Ionicons name={focused ? "scan" : "scan-outline"} size={size} color={color} />
             </View>
           ),
         }}
@@ -62,10 +62,10 @@ export default function TabsLayout() {
       <ExpoTabs.Screen
         name="diary"
         options={{
-          title: 'Diary',
+          title: 'Cuidador',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainerHome]}>
-              <Ionicons name={focused ? "create" : "create-outline"} size={size} color={color} />
+              <Ionicons name={focused ? "clipboard" : "clipboard-outline"} size={size} color={color} />
             </View>
           ),
         }}
@@ -73,7 +73,7 @@ export default function TabsLayout() {
       <ExpoTabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Perfil',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainerHome]}>
               <Ionicons name={focused ? "person" : "person-outline"} size={size} color={color} />
@@ -81,6 +81,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <ExpoTabs.Screen name="visit" options={{ href: null }} />
     </ExpoTabs>
   );
 }

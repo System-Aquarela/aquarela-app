@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
@@ -6,11 +6,11 @@ import { Text } from '../../src/components/ui/Text';
 import { Card } from '../../src/components/ui/Card';
 import { theme } from '../../src/design/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useAccessibility } from '../../src/store/AccessibilityContext';
 
 export default function AccessibilityScreen() {
   const router = useRouter();
-  const [largeText, setLargeText] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
+  const { largeText, highContrast, setLargeText, setHighContrast } = useAccessibility();
 
   return (
     <Screen scrollable>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { Text } from '../../src/components/ui/Text';
@@ -17,34 +17,42 @@ const MOODS: MoodType[] = ['Tranquila', 'Alegre', 'Cansada', 'Confusa', 'Agitada
 export default function CreateDiaryEntryScreen() {
   const router = useRouter();
   const { selectedProfile, user } = useApp();
-  
+
   const [mood, setMood] = useState<MoodType | null>(null);
+  const [sleep, setSleep] = useState('');
+  const [food, setFood] = useState('');
+  const [energy, setEnergy] = useState('');
   const [interaction, setInteraction] = useState('');
+  const [socialInteraction, setSocialInteraction] = useState('');
   const [orientation, setOrientation] = useState('');
   const [recognition, setRecognition] = useState('');
   const [obs, setObs] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async () => {
+  async function handleSave() {
     if (!selectedProfile || !user || !mood || !interaction || !orientation || !recognition) return;
-    
+
     setLoading(true);
     const entry: DiaryEntry = {
-      id: Math.random().toString(),
+      id: `d-${Date.now()}`,
       profileId: selectedProfile.id,
       registeredBy: user.name,
       date: new Date().toISOString(),
       mood,
+      sleep,
+      food,
+      energy,
       interaction,
+      socialInteraction,
       orientation,
       recognition,
-      observation: obs
+      observation: obs,
     };
 
     await diaryService.addEntry(entry);
     setLoading(false);
     router.replace('/tabs/diary');
-  };
+  }
 
   return (
     <Screen scrollable>
@@ -58,39 +66,27 @@ export default function CreateDiaryEntryScreen() {
       <Card style={styles.section}>
         <Text variant="md" weight="bold" style={styles.label}>Humor principal do dia</Text>
         <View style={styles.moodGrid}>
-          {MOODS.map(m => (
-            <TouchableOpacity 
-              key={m} 
-              style={[styles.moodItem, mood === m && styles.moodItemSelected]}
-              onPress={() => setMood(m)}
-            >
-              <Text variant="sm" weight={mood === m ? "bold" : "regular"} color={mood === m ? theme.colors.whiteSnow : theme.colors.readingGraphite}>
-                {m}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {MOODS.map(item => {
+            const selected = mood === item;
+            return (
+              <TouchableOpacity key={item} style={[styles.moodItem, selected && styles.moodItemSelected]} onPress={() => setMood(item)}>
+                <Text variant="sm" weight={selected ? 'bold' : 'regular'} color={selected ? theme.colors.whiteSnow : theme.colors.readingGraphite}>
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </Card>
 
       <Card style={styles.section}>
-        <Input
-          label="Como foi a interação?"
-          placeholder="Ex: Boa, conversou bastante"
-          value={interaction}
-          onChangeText={setInteraction}
-        />
-        <Input
-          label="Como estava a orientação?"
-          placeholder="Ex: Orientada em tempo e espaço"
-          value={orientation}
-          onChangeText={setOrientation}
-        />
-        <Input
-          label="Como foi o reconhecimento?"
-          placeholder="Ex: Reconheceu todos da família"
-          value={recognition}
-          onChangeText={setRecognition}
-        />
+        <Input label="Sono" placeholder="Ex: Dormiu bem, acordou duas vezes" value={sleep} onChangeText={setSleep} />
+        <Input label="Alimentação" placeholder="Ex: Tomou café completo" value={food} onChangeText={setFood} />
+        <Input label="Energia" placeholder="Ex: Disposta pela manhã" value={energy} onChangeText={setEnergy} />
+        <Input label="Como foi a interação?" placeholder="Ex: Boa, conversou bastante" value={interaction} onChangeText={setInteraction} />
+        <Input label="Interação social" placeholder="Ex: Conversou com a filha por vídeo" value={socialInteraction} onChangeText={setSocialInteraction} />
+        <Input label="Como estava a orientação?" placeholder="Ex: Orientada em tempo e espaço" value={orientation} onChangeText={setOrientation} />
+        <Input label="Como foi o reconhecimento?" placeholder="Ex: Reconheceu todos da família" value={recognition} onChangeText={setRecognition} />
         <Input
           label="Observação (opcional)"
           placeholder="Mais algum detalhe?"
@@ -131,7 +127,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.gray100,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.round,
     borderWidth: 1,
     borderColor: theme.colors.gray200,
   },
@@ -140,7 +136,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.blueMemory,
   },
   textArea: {
-    height: 80,
+    height: 90,
     textAlignVertical: 'top',
   },
   button: {

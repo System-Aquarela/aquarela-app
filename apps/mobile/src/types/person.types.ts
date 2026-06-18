@@ -6,4 +6,10 @@ export interface Person {
   description: string;
   supportPhrase?: string;
   photoUrl?: string;
+  photoMediaId?: string;
+  birthDate?: string;
+  stories?: string[];
+  sharedMoments?: string[];
+  lastInteraction?: string;
+  scannerConsent?: boolean;
 }

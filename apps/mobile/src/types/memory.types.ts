@@ -1,4 +1,18 @@
-export type MemoryCategory = 'Família' | 'Viagens' | 'Músicas' | 'Infância' | 'Datas especiais' | 'Favoritas' | 'Sensíveis';
+export type MemoryCategory =
+  | 'Infância'
+  | 'Adolescência'
+  | 'Vida adulta'
+  | 'Família'
+  | 'Trabalho'
+  | 'Viagens'
+  | 'Conquistas'
+  | 'Músicas'
+  | 'Documentos'
+  | 'Datas especiais'
+  | 'Favoritas'
+  | 'Sensíveis';
+
+export type MemoryMediaType = 'foto' | 'video' | 'audio' | 'documento' | 'texto' | 'musica';
 
 export interface Memory {
   id: string;
@@ -8,9 +22,14 @@ export interface Memory {
   story: string;
   category: MemoryCategory;
   peopleInvolved: string[];
+  peopleIds?: string[];
   suggestedPhrase: string;
   previousReaction: string;
   isSensitive: boolean;
   isFavorite: boolean;
+  mediaType?: MemoryMediaType;
+  mediaId?: string;
+  location?: string;
+  createdAt?: string;
   imageUrl?: string;
 }

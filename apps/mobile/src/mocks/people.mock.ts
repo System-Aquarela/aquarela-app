@@ -8,6 +8,11 @@ export const mockPeople: Person[] = [
     relation: 'Filha',
     description: 'Filha mais velha de Dona Lúcia.',
     supportPhrase: 'Mãe, a Ana te ama muito.',
+    birthDate: '1978-04-12',
+    stories: ['Costumava cozinhar com Dona Lúcia aos domingos.', 'Organiza os álbuns de família.'],
+    sharedMoments: ['Viagem para Ubatuba', 'Aniversário de 70 anos'],
+    lastInteraction: 'Ligou ontem à tarde',
+    scannerConsent: true,
   },
   {
     id: 'peo2',
@@ -15,6 +20,11 @@ export const mockPeople: Person[] = [
     name: 'João',
     relation: 'Filho',
     description: 'Filho de Dona Lúcia.',
+    birthDate: '1982-09-03',
+    stories: ['Toca violão nas reuniões familiares.'],
+    sharedMoments: ['Almoço de domingo'],
+    lastInteraction: 'Visitou no fim de semana',
+    scannerConsent: true,
   },
   {
     id: 'peo3',
@@ -22,5 +32,10 @@ export const mockPeople: Person[] = [
     name: 'Pedro',
     relation: 'Neto',
     description: 'Neto que costuma visitá-la aos domingos.',
-  }
+    birthDate: '2008-11-20',
+    stories: ['Gosta de mostrar fotos da escola para a avó.'],
+    sharedMoments: ['Foto com os netos'],
+    lastInteraction: 'Mandou áudio hoje',
+    scannerConsent: false,
+  },
 ];

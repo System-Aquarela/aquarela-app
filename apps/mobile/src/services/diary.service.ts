@@ -1,22 +1,22 @@
-import { storageService } from './storage.service';
+import { apiClient } from './api.service';
+import { profilesService } from './profiles.service';
 import { DiaryEntry } from '../types/diary.types';
-import { mockDiary } from '../mocks/diary.mock';
 
-const DIARY_KEY = '@aquarela_diary';
+async function selectedProfileId() {
+  const profile = await profilesService.getSelectedProfile();
+  if (!profile) throw new Error('Selecione uma pessoa acompanhada.');
+  return profile.id;
+}
 
 export const diaryService = {
   async getEntries(): Promise<DiaryEntry[]> {
-    const entries = await storageService.getItem<DiaryEntry[]>(DIARY_KEY);
-    if (!entries) {
-      await storageService.setItem(DIARY_KEY, mockDiary);
-      return mockDiary;
-    }
-    return entries;
+    const profileId = await selectedProfileId();
+    const response = await apiClient.get<{ entries: DiaryEntry[] }>(`/profiles/${profileId}/diary`);
+    return response.entries;
   },
 
   async addEntry(entry: DiaryEntry): Promise<void> {
-    const entries = await this.getEntries();
-    entries.unshift(entry);
-    await storageService.setItem(DIARY_KEY, entries);
-  }
+    const profileId = await selectedProfileId();
+    await apiClient.post(`/profiles/${profileId}/diary`, entry);
+  },
 };

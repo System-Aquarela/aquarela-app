@@ -1,113 +1,136 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/ui/Screen';
 import { Text } from '../../src/components/ui/Text';
 import { Card } from '../../src/components/ui/Card';
 import { theme } from '../../src/design/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { memoriesService } from '../../src/services/memories.service';
+import { Memory, MemoryCategory } from '../../src/types/memory.types';
+
+const categories: Array<'Todas' | MemoryCategory> = [
+  'Todas',
+  'Infância',
+  'Adolescência',
+  'Vida adulta',
+  'Família',
+  'Trabalho',
+  'Viagens',
+  'Conquistas',
+  'Músicas',
+  'Documentos',
+];
 
 export default function MemoriesScreen() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [activeCategory, setActiveCategory] = useState<'Todas' | MemoryCategory>('Todas');
 
-  const mockMemories = [
-    {
-      id: '1',
-      title: 'Viagem para Ubatuba 1998',
-      desc: 'Um final de semana inesquecível com toda a família reunida na...',
-      category: 'VIAGENS',
-      color: '#CBB27A' // sand color image mock
-    },
-    {
-      id: '2',
-      title: 'Aniversário de 70 anos',
-      desc: 'A surpresa que organizaram para mim. Nunca vou esquecer a...',
-      category: 'FAMÍLIA',
-      color: '#653B25' // dark brown image mock
-    },
-    {
-      id: '3',
-      title: 'Jardim da casa antiga',
-      desc: 'As roseiras que eu mesma plantei na primavera de 1985. Como e...',
-      category: 'CASA',
-      color: '#416B4A' // green image mock
-    }
-  ];
+  useEffect(() => {
+    loadMemories();
+  }, []);
+
+  async function loadMemories() {
+    setMemories(await memoriesService.getMemories());
+  }
+
+  const filteredMemories = activeCategory === 'Todas'
+    ? memories
+    : memories.filter(memory => memory.category === activeCategory);
 
   return (
     <Screen style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={24} color={theme.colors.gray400} />
+        <View>
+          <Text variant="xl" weight="bold" color={theme.colors.blueMemory}>
+            Biblioteca de Vida
+          </Text>
+          <Text variant="sm" color={theme.colors.gray500}>
+            Memórias, linha do tempo, mapa afetivo e legados.
+          </Text>
         </View>
-        <Text variant="xl" weight="bold" color={theme.colors.blueMemory}>
-          Aquarela
-        </Text>
-        <TouchableOpacity>
-          <Ionicons name="notifications-outline" size={28} color={theme.colors.blueMemory} />
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/memories/create')}>
+          <Ionicons name="add" size={24} color={theme.colors.whiteSnow} />
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={theme.colors.gray400} />
-        <Text variant="md" color={theme.colors.gray400} style={styles.searchText}>Buscar memórias...</Text>
+      <View style={styles.quickRow}>
+        <QuickAction title="Linha do tempo" icon="time-outline" onPress={() => router.push('/memories/timeline')} />
+        <QuickAction title="Mapa afetivo" icon="share-social-outline" onPress={() => router.push('/memories/affective-map')} />
+        <QuickAction title="Legados" icon="book-outline" onPress={() => router.push('/legacy')} />
       </View>
 
-      {/* Filters */}
-      <View style={styles.filtersContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
-          <View style={[styles.filterPill, styles.filterActive]}>
-            <Text variant="md" weight="bold" color={theme.colors.whiteSnow}>Todas</Text>
-          </View>
-          <View style={styles.filterPill}>
-            <Text variant="md" weight="bold" color={theme.colors.readingGraphite}>Família</Text>
-          </View>
-          <View style={styles.filterPill}>
-            <Text variant="md" weight="bold" color={theme.colors.readingGraphite}>Viagens</Text>
-          </View>
-          <View style={styles.filterPill}>
-            <Text variant="md" weight="bold" color={theme.colors.readingGraphite}>Casa</Text>
-          </View>
-        </ScrollView>
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
+        {categories.map(category => {
+          const isActive = activeCategory === category;
+          return (
+            <TouchableOpacity
+              key={category}
+              style={[styles.filterPill, isActive && styles.filterActive]}
+              onPress={() => setActiveCategory(category)}
+            >
+              <Text variant="sm" weight="bold" color={isActive ? theme.colors.whiteSnow : theme.colors.readingGraphite}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
-      {/* List */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-        {mockMemories.map(item => (
+        {filteredMemories.map(item => (
           <TouchableOpacity key={item.id} onPress={() => router.push(`/memories/${item.id}`)} activeOpacity={0.9}>
-            <Card style={[styles.card, { padding: 0 }]}>
-              <View style={[styles.imageMock, { backgroundColor: item.color }]} />
-              <View style={styles.cardContent}>
-                <Text variant="sm" weight="bold" color={theme.colors.blueMemory} style={styles.cardCategory}>
-                  {item.category}
-                </Text>
-                <Text variant="lg" weight="bold" color={theme.colors.readingGraphite} style={styles.cardTitle}>
-                  {item.title}
-                </Text>
-                <Text variant="md" color={theme.colors.gray500} style={styles.cardDesc}>
-                  {item.desc}
-                </Text>
+            <Card style={styles.card} padding="lg">
+              <View style={styles.cardHeader}>
+                {item.mediaType === 'foto' && item.imageUrl ? <Image source={{ uri: item.imageUrl }} style={styles.memoryImage} /> : (
+                  <View style={styles.imageMock}><Ionicons name={getMediaIcon(item.mediaType)} size={24} color={theme.colors.blueMemory} /></View>
+                )}
+                <View style={styles.cardContent}>
+                  <Text variant="sm" weight="bold" color={theme.colors.softTerracotta}>
+                    {item.category}
+                  </Text>
+                  <Text variant="lg" weight="bold" color={theme.colors.readingGraphite} style={styles.cardTitle}>
+                    {item.title}
+                  </Text>
+                  <Text variant="sm" color={theme.colors.gray500}>
+                    {item.period}{item.location ? ` • ${item.location}` : ''}
+                  </Text>
+                </View>
               </View>
+              <Text variant="md" color={theme.colors.gray500} style={styles.cardDesc}>
+                {item.story}
+              </Text>
             </Card>
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/memories/create')}>
-        <Ionicons name="add" size={32} color={theme.colors.whiteSnow} />
-      </TouchableOpacity>
     </Screen>
   );
+}
+
+function QuickAction({ title, icon, onPress }: { title: string; icon: any; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.quickAction} onPress={onPress}>
+      <Ionicons name={icon} size={20} color={theme.colors.blueMemory} />
+      <Text variant="xs" weight="bold" color={theme.colors.readingGraphite} align="center" style={styles.quickText}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function getMediaIcon(mediaType?: string) {
+  if (mediaType === 'audio') return 'mic-outline';
+  if (mediaType === 'video') return 'videocam-outline';
+  if (mediaType === 'documento') return 'document-text-outline';
+  if (mediaType === 'musica') return 'musical-notes-outline';
+  return 'images-outline';
 }
 
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 0,
-    position: 'relative',
   },
   header: {
     flexDirection: 'row',
@@ -115,41 +138,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
   },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.gray200,
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.blueMemory,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  searchBar: {
+  quickRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.whiteSnow,
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
-  searchText: {
-    marginLeft: theme.spacing.sm,
+  quickAction: {
+    flex: 1,
+    minHeight: 74,
+    backgroundColor: theme.colors.whiteSnow,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.sm,
   },
-  filtersContainer: {
-    marginBottom: theme.spacing.lg,
+  quickText: {
+    marginTop: theme.spacing.xs,
   },
   filtersScroll: {
     gap: theme.spacing.sm,
+    paddingBottom: theme.spacing.lg,
   },
   filterPill: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
+    borderRadius: theme.radius.round,
     backgroundColor: theme.colors.whiteSnow,
     borderWidth: 1,
     borderColor: theme.colors.gray200,
@@ -159,42 +180,33 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.blueMemory,
   },
   listContent: {
-    paddingBottom: 100, // space for fab and tabbar
+    paddingBottom: 110,
   },
   card: {
-    marginBottom: theme.spacing.lg,
-    overflow: 'hidden',
+    marginBottom: theme.spacing.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
   imageMock: {
-    height: 160,
-    width: '100%',
-  },
-  cardContent: {
-    padding: theme.spacing.lg,
-  },
-  cardCategory: {
-    marginBottom: theme.spacing.xs,
-  },
-  cardTitle: {
-    marginBottom: theme.spacing.xs,
-  },
-  cardDesc: {
-    lineHeight: 20,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: theme.spacing.xl,
-    right: theme.spacing.lg,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.blueMemory,
+    width: 58,
+    height: 58,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.lightSand,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    marginRight: theme.spacing.md,
+  },
+  memoryImage: { width: 58, height: 58, borderRadius: theme.radius.md, marginRight: theme.spacing.md },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    marginVertical: theme.spacing.xs,
+  },
+  cardDesc: {
+    lineHeight: 21,
   },
 });

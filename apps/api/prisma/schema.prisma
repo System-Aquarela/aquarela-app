@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MembershipRole {
+  owner
+  caregiver
+  family
+  viewer
+}
+
+enum MediaType {
+  photo
+  video
+  audio
+  document
+  text
+  music
+}
+
+enum MemoryCategory {
+  infancia
+  adolescencia
+  vida_adulta
+  familia
+  trabalho
+  viagens
+  conquistas
+  musicas
+  documentos
+  datas_especiais
+  favoritas
+  sensiveis
+}
+
+enum LegacyType {
+  texto
+  audio
+  video
+}
+
+model User {
+  id              String             @id @default(cuid())
+  name            String
+  email           String             @unique
+  passwordHash    String
+  termsAcceptedAt DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  sessions        Session[]
+  memberships     FamilyMembership[]
+  diaryEntries    DiaryEntry[]
+  visits          Visit[]
+  uploads         MediaAsset[]
+  consents        ConsentRecord[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CareProfile {
+  id               String                    @id @default(cuid())
+  name             String
+  nickname         String?
+  birthDate        DateTime?
+  age              Int?
+  city             String?
+  photoUrl         String?
+  photoMediaId     String?                   @unique
+  favoriteSubjects String[]                  @default([])
+  favoriteSongs    String[]                  @default([])
+  sensitiveTopics  String[]                  @default([])
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  memberships      FamilyMembership[]
+  people           ImportantPerson[]
+  memories         Memory[]
+  diary            DiaryEntry[]
+  visits           Visit[]
+  legacy           LegacyEntry[]
+  scores           ConnectionScoreSnapshot[]
+  photoMedia       MediaAsset?               @relation("CareProfilePhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+  mediaAssets      MediaAsset[]              @relation("ProfileMedia")
+  consents         ConsentRecord[]
+}
+
+model FamilyMembership {
+  id        String         @id @default(cuid())
+  userId    String
+  profileId String
+  role      MembershipRole @default(family)
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile   CareProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, profileId])
+}
+
+model ImportantPerson {
+  id              String          @id @default(cuid())
+  profileId       String
+  name            String
+  relation        String
+  description     String
+  supportPhrase   String?
+  photoUrl        String?
+  photoMediaId    String?         @unique
+  birthDate       DateTime?
+  stories         String[]        @default([])
+  sharedMoments   String[]        @default([])
+  lastInteraction String?
+  scannerConsent  Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  profile         CareProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  faceImages      FaceImage[]
+  memories        MemoryPerson[]
+  photoMedia      MediaAsset?     @relation("ImportantPersonPhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+  consents        ConsentRecord[]
+}
+
+model FaceImage {
+  id        String          @id @default(cuid())
+  personId  String
+  mediaId   String?
+  embedding Json?
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  person    ImportantPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
+  media     MediaAsset?     @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@index([personId, active])
+}
+
+model MediaAsset {
+  id              String           @id @default(cuid())
+  profileId       String?
+  uploaderId      String?
+  type            MediaType
+  bucket          String
+  objectKey       String
+  url             String
+  mimeType        String
+  size            Int
+  createdAt       DateTime         @default(now())
+  memories        Memory[]
+  faceImages      FaceImage[]
+  legacy          LegacyEntry[]
+  profile         CareProfile?     @relation("ProfileMedia", fields: [profileId], references: [id], onDelete: Cascade)
+  uploader        User?            @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  profilePhotoFor CareProfile?     @relation("CareProfilePhoto")
+  personPhotoFor  ImportantPerson? @relation("ImportantPersonPhoto")
+
+  @@index([profileId])
+  @@index([uploaderId])
+}
+
+model Memory {
+  id               String         @id @default(cuid())
+  profileId        String
+  mediaId          String?
+  title            String
+  period           String
+  story            String
+  category         MemoryCategory
+  suggestedPhrase  String
+  previousReaction String?
+  isSensitive      Boolean        @default(false)
+  isFavorite       Boolean        @default(false)
+  location         String?
+  occurredAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  profile          CareProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  media            MediaAsset?    @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  people           MemoryPerson[]
+}
+
+model MemoryPerson {
+  memoryId String
+  personId String
+  memory   Memory          @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  person   ImportantPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([memoryId, personId])
+}
+
+model DiaryEntry {
+  id                String      @id @default(cuid())
+  profileId         String
+  authorId          String
+  date              DateTime    @default(now())
+  mood              String
+  sleep             String?
+  food              String?
+  energy            String?
+  interaction       String
+  socialInteraction String?
+  orientation       String
+  recognition       String
+  observation       String?
+  profile           CareProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  author            User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Visit {
+  id                    String          @id @default(cuid())
+  profileId             String
+  visitorId             String
+  date                  DateTime        @default(now())
+  generatedSmile        Boolean         @default(false)
+  generatedConversation Boolean         @default(false)
+  generatedDiscomfort   Boolean         @default(false)
+  observation           String?
+  roadmap               Json?
+  profile               CareProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  visitor               User            @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  reactions             VisitReaction[]
+}
+
+model VisitReaction {
+  id      String  @id @default(cuid())
+  visitId String
+  label   String
+  value   Boolean @default(true)
+  visit   Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+}
+
+model LegacyEntry {
+  id        String      @id @default(cuid())
+  profileId String
+  mediaId   String?
+  question  String
+  answer    String
+  type      LegacyType
+  date      DateTime    @default(now())
+  profile   CareProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  media     MediaAsset? @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+}
+
+model ConsentRecord {
+  id         String           @id @default(cuid())
+  profileId  String?
+  personId   String?
+  userId     String?
+  scope      String
+  granted    Boolean
+  recordedAt DateTime         @default(now())
+  profile    CareProfile?     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  person     ImportantPerson? @relation(fields: [personId], references: [id], onDelete: Cascade)
+  user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([profileId, scope, recordedAt])
+  @@index([personId, scope, recordedAt])
+}
+
+model ConnectionScoreSnapshot {
+  id        String      @id @default(cuid())
+  profileId String
+  score     Int
+  label     String
+  detail    String
+  createdAt DateTime    @default(now())
+  profile   CareProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}

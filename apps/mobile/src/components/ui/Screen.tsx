@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, ViewStyle, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../design/theme';
+import { useAccessibility } from '../../store/AccessibilityContext';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -18,9 +19,11 @@ export function Screen({
   contentContainerStyle,
   backgroundColor = theme.colors.creamAffection,
 }: ScreenProps) {
+  const { highContrast } = useAccessibility();
+  const effectiveBackground = highContrast ? theme.colors.whiteSnow : backgroundColor;
   if (scrollable) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor }, style]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: effectiveBackground }, style]}>
         <ScrollView
           contentContainerStyle={[styles.content, contentContainerStyle]}
           keyboardShouldPersistTaps="handled"
@@ -33,7 +36,7 @@ export function Screen({
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }, style]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: effectiveBackground }, style]}>
       <View style={[styles.content, contentContainerStyle, { flex: 1 }]}>
         {children}
       </View>

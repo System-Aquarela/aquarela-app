@@ -11,11 +11,11 @@ export default function SettingsScreen() {
   const router = useRouter();
 
   const settingsOptions = [
-    { id: '1', title: 'Conta', icon: 'person-outline', route: null },
-    { id: '2', title: 'Notificações', icon: 'notifications-outline', route: null },
-    { id: '3', title: 'Aparência', icon: 'color-palette-outline', route: null },
-    { id: '4', title: 'Modo acessível', icon: 'eye-outline', route: '/settings/accessibility' },
-    { id: '5', title: 'Privacidade e Segurança', icon: 'lock-closed-outline', route: '/settings/privacy' },
+    { id: '1', title: 'Editar perfil acompanhado', icon: 'person-outline', route: '/profiles/manage?mode=edit' },
+    { id: '4', title: 'Acessibilidade e aparência', icon: 'eye-outline', route: '/settings/accessibility' },
+    { id: '5', title: 'Privacidade e segurança', icon: 'lock-closed-outline', route: '/settings/privacy' },
+    { id: '6', title: 'Família e permissões', icon: 'key-outline', route: '/permissions/index' },
+    { id: '7', title: 'Plano Premium', icon: 'star-outline', route: '/premium' },
   ];
 
   return (
@@ -29,10 +29,10 @@ export default function SettingsScreen() {
 
       <Card padding="sm">
         {settingsOptions.map((opt, index) => (
-          <TouchableOpacity 
-            key={opt.id} 
+          <TouchableOpacity
+            key={opt.id}
             style={[styles.optionRow, index !== settingsOptions.length - 1 && styles.borderBottom]}
-            onPress={() => opt.route && router.push(opt.route as any)}
+            onPress={() => router.push(opt.route as any)}
             activeOpacity={0.7}
           >
             <View style={styles.optionLeft}>

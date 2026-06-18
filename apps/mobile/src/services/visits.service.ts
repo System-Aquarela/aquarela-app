@@ -1,22 +1,22 @@
-import { storageService } from './storage.service';
+import { apiClient } from './api.service';
+import { profilesService } from './profiles.service';
 import { VisitRecord } from '../types/visit.types';
-import { mockVisits } from '../mocks/visits.mock';
 
-const VISITS_KEY = '@aquarela_visits';
+async function selectedProfileId() {
+  const profile = await profilesService.getSelectedProfile();
+  if (!profile) throw new Error('Selecione uma pessoa acompanhada.');
+  return profile.id;
+}
 
 export const visitsService = {
   async getVisits(): Promise<VisitRecord[]> {
-    const visits = await storageService.getItem<VisitRecord[]>(VISITS_KEY);
-    if (!visits) {
-      await storageService.setItem(VISITS_KEY, mockVisits);
-      return mockVisits;
-    }
-    return visits;
+    const profileId = await selectedProfileId();
+    const response = await apiClient.get<{ visits: VisitRecord[] }>(`/profiles/${profileId}/visits`);
+    return response.visits;
   },
 
   async addVisit(visit: VisitRecord): Promise<void> {
-    const visits = await this.getVisits();
-    visits.unshift(visit);
-    await storageService.setItem(VISITS_KEY, visits);
-  }
+    const profileId = await selectedProfileId();
+    await apiClient.post(`/profiles/${profileId}/visits`, visit);
+  },
 };

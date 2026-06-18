@@ -7,6 +7,8 @@ import { Button } from '../src/components/ui/Button';
 import { theme } from '../src/design/theme';
 import { Ionicons } from '@expo/vector-icons';
 
+const aquarelaLogo = require('../../../info/AquarelaLogo.jpeg');
+
 export default function WelcomeScreen() {
   const router = useRouter();
 
@@ -18,10 +20,7 @@ export default function WelcomeScreen() {
 
       <View style={styles.content}>
         <View style={styles.avatarContainer}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=2787&auto=format&fit=crop' }} 
-            style={styles.avatar} 
-          />
+          <Image source={aquarelaLogo} style={styles.avatar} />
         </View>
 
         <Text variant="xxl" weight="bold" color={theme.colors.blueMemory} align="center">
@@ -29,6 +28,9 @@ export default function WelcomeScreen() {
         </Text>
         <Text variant="md" color={theme.colors.readingGraphite} align="center" style={styles.subtitle}>
           Memórias que aproximam famílias. Guarde histórias, prepare visitas e fortaleça vínculos com quem você ama.
+        </Text>
+        <Text variant="sm" weight="bold" color={theme.colors.softTerracotta} align="center" style={styles.tagline}>
+          Transformando lembranças em conexões
         </Text>
       </View>
       
@@ -89,7 +91,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 200,
     height: 200,
-    borderRadius: 100,
+    borderRadius: 44,
     backgroundColor: theme.colors.whiteSnow,
     justifyContent: 'center',
     alignItems: 'center',
@@ -112,6 +114,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: theme.spacing.md,
   },
+  tagline: { marginTop: theme.spacing.md },
   actions: {
     paddingBottom: theme.spacing.xl,
   },
